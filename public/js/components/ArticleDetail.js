@@ -9,7 +9,8 @@ export default {
       tocItems: [], // 文章目录项
       showTOC: true, // 是否显示目录
       currentSection: null, // 当前阅读的段落ID
-      scrollY: 0 // 页面滚动位置
+      scrollY: 0, // 页面滚动位置
+      admin: null // 存储管理员信息
     };
   },
   methods: {
@@ -140,14 +141,29 @@ export default {
       // 添加一些假的关键词以符合设计
       keywords.push('梳理', '创作方式');
       return keywords;
+    },
+    
+    // 获取管理员信息（无论是否登录）
+    getAdminInfo() {
+      axios.get('/api/auth/admin-info')
+        .then(response => {
+          if (response.data.success) {
+            this.admin = response.data.admin;
+          }
+        })
+        .catch(err => {
+          console.error('获取管理员信息失败:', err);
+        });
     }
   },
   created() {
     this.fetchArticle();
+    this.getAdminInfo(); // 组件创建时获取管理员信息
   },
   watch: {
     '$route.params.id'() {
       this.fetchArticle();
+      this.getAdminInfo(); // 路由参数变化时也更新管理员信息
     }
   },
   template: `
@@ -225,10 +241,10 @@ export default {
             <div class="article-detail-footer">
               <div class="article-author">
                 <div class="author-avatar">
-                  <img src="/images/avatar.png" alt="作者头像">
+                  <img :src="admin && admin.avatar ? admin.avatar : '/images/avatar.png'" alt="作者头像">
                 </div>
                 <div class="author-info">
-                  <div class="author-name">作者</div>
+                  <div class="author-name">{{ admin ? (admin.name || admin.username) : '作者' }}</div>
                   <div class="publish-info">发表于 {{ formatDate(article.created_at) }}</div>
                 </div>
               </div>

@@ -51,7 +51,16 @@ const Article = {
       [searchTerm, searchTerm],
       callback
     );
-  }
+  },
+
+  // 仅更新文章内容，用于自动保存
+  updateContent: (id, content, callback) => {
+    db.query(
+      'UPDATE articles SET content = ?, updated_at = NOW() WHERE id = ?', 
+      [content, id], 
+      callback
+    );
+  },
 };
 
 module.exports = Article;

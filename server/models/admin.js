@@ -6,6 +6,11 @@ const Admin = {
   findByUsername: (username, callback) => {
     db.query('SELECT * FROM admin WHERE username = ?', [username], callback);
   },
+  
+  // 通过ID查找管理员
+  findById: (id, callback) => {
+    db.query('SELECT * FROM admin WHERE id = ?', [id], callback);
+  },
 
   // 创建新管理员
   create: async (adminData, callback) => {
@@ -32,6 +37,17 @@ const Admin = {
     } catch (error) {
       return false;
     }
+  },
+  
+  // 密码加密
+  hashPassword: async (plainPassword) => {
+    const salt = await bcrypt.genSalt(10);
+    return await bcrypt.hash(plainPassword, salt);
+  },
+  
+  // 获取第一个管理员账户（用于个人网站）
+  getFirst: (callback) => {
+    db.query('SELECT * FROM admin ORDER BY id LIMIT 1', callback);
   },
   
   // 检查管理员表是否为空，用于初始化设置

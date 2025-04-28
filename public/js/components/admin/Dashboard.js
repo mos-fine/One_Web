@@ -44,7 +44,7 @@ export default {
       <!-- 侧边栏导航 -->
       <div class="admin-sidebar">
         <div class="admin-sidebar-header">
-          <img src="/images/avatar.png" alt="管理员头像">
+          <img :src="admin && admin.avatar ? admin.avatar : '/images/avatar.png'" alt="管理员头像">
           <div>
             <h3>{{ admin ? admin.name || admin.username : '管理员' }}</h3>
             <small>后台管理</small>
@@ -65,6 +65,16 @@ export default {
           <li class="admin-menu-item">
             <router-link to="/admin/social" class="admin-menu-link">
               <i class="fas fa-share-alt admin-menu-icon"></i> 社交媒体
+            </router-link>
+          </li>
+          <li class="admin-menu-item">
+            <router-link to="/admin/profile" class="admin-menu-link">
+              <i class="fas fa-user-circle admin-menu-icon"></i> 个人资料
+            </router-link>
+          </li>
+          <li class="admin-menu-item">
+            <router-link to="/admin/ai-settings" class="admin-menu-link">
+              <i class="fas fa-robot admin-menu-icon"></i> AI设置
             </router-link>
           </li>
           <li class="admin-menu-item">

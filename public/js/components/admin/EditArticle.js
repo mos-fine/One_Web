@@ -64,9 +64,14 @@ export default {
             this.article = response.data.article;
             console.log('【文章数据获取成功】，文章内容长度:', this.article.content ? this.article.content.length : 0);
             
-            // 使用更长的延迟以确保DOM和Vue更新完成
+            // 检查编辑器是否已经预加载并准备就绪
+            const isEditorPreloaded = window.editorResources && window.editorResources.loaded;
+            const setContentDelay = isEditorPreloaded ? 100 : 300; // 如果已预加载，使用更短的延迟
+            
+            console.log(`【延迟执行】准备设置内容到Word编辑器 (延迟: ${setContentDelay}ms, 预加载状态: ${isEditorPreloaded ? '已预加载' : '未预加载'})`);
+            
+            // 使用更智能的延迟机制设置内容
             setTimeout(() => {
-              console.log('【延迟执行】准备设置内容到Word编辑器');
               // 文章加载完成后，设置编辑器内容
               if (this.wordEditor && this.article.content) {
                 console.log('【Word编辑器已初始化】，设置内容到编辑器，长度:', this.article.content.length);
@@ -80,6 +85,8 @@ export default {
                   compatEditor.setContents(fixedContent)
                     .then(() => {
                       console.log('【Word内容设置成功】内容已加载到编辑器');
+                      // 标记内容已加载成功
+                      window.editorContentLoaded = true;
                     })
                     .catch(error => {
                       console.error('【错误】设置Word编辑器内容失败:', error);
@@ -90,6 +97,7 @@ export default {
                         .then(success => {
                           if (success) {
                             console.log('【延迟加载成功】内容已成功设置到Word编辑器');
+                            window.editorContentLoaded = true;
                           } else {
                             console.warn('【警告】延迟加载内容失败，尝试重建编辑器');
                             this.reinitializeWordEditor();
@@ -279,11 +287,59 @@ export default {
           const containerId = this.$refs.wordEditorContainer.id || 'word-editor-container';
           this.$refs.wordEditorContainer.id = containerId;
           
+          // 检查是否已经预加载了编辑器
+          const isPreloaded = window.editorResources && window.editorResources.loaded;
+          console.log('编辑器资源预加载状态:', isPreloaded ? '已预加载' : '未预加载');
+          
           // 初始化Word编辑器
-          initializeWordEditor(containerId)
+          // 添加自定义样式以确保编辑器正确显示
+          const editorStyle = document.createElement('style');
+          editorStyle.textContent = `
+            #${containerId} .ai-editor-container {
+              min-height: 800px !important;
+              height: auto !important;
+              overflow-y: visible !important;
+            }
+            #${containerId} .ql-editor {
+              min-height: 750px !important;
+              height: auto !important;
+              overflow-y: auto !important;
+              padding: 20px;
+            }
+          `;
+          document.head.appendChild(editorStyle);
+          
+          // 准备自动保存配置
+          const autoSaveConfig = {
+            autoSave: this.wordEditorConfig.autoSave || true,
+            autoSaveInterval: 5000, // 每5秒保存一次
+            onAutoSave: (content) => this.handleAutoSave(content)
+          };
+          
+          // 初始化编辑器，传入自动保存配置
+          initializeWordEditor(containerId, '', autoSaveConfig)
             .then(editorInstance => {
               console.log('Word编辑器创建成功');
               this.wordEditor = editorInstance;
+              
+              // 确保编辑器容器高度正确
+              if (this.$refs.wordEditorContainer) {
+                const container = this.$refs.wordEditorContainer;
+                container.style.minHeight = '800px';
+                
+                // 获取编辑器实际元素
+                const aiEditorContainer = container.querySelector('.ai-editor-container');
+                const qlEditor = container.querySelector('.ql-editor');
+                
+                if (aiEditorContainer) aiEditorContainer.style.height = 'auto';
+                if (qlEditor) qlEditor.style.minHeight = '750px';
+              }
+              
+              // 添加全屏状态变化监听
+              this.$refs.wordEditorContainer.addEventListener('editor-fullscreen-change', (event) => {
+                console.log('编辑器全屏状态改变:', event.detail.isFullscreen);
+                this.handleFullscreenChange(event.detail.isFullscreen);
+              });
               
               // 如果处于编辑模式，则设置编辑器内容
               if (this.isEditing && this.article && this.article.content) {
@@ -294,19 +350,44 @@ export default {
                 const fixedContent = fixWordEditorContent(this.article.content);
                 const compatEditor = createCompatibilityLayer(this.wordEditor);
                 
-                compatEditor.setContents(fixedContent)
-                  .then(() => {
-                    console.log('Word编辑器内容设置成功');
-                  })
-                  .catch(error => {
-                    console.error('设置Word编辑器内容时出错:', error);
-                  });
+                // 延迟设置内容，确保编辑器完全初始化
+                setTimeout(() => {
+                  compatEditor.setContents(fixedContent)
+                    .then(() => {
+                      console.log('Word编辑器内容设置成功');
+                    })
+                    .catch(error => {
+                      console.error('设置Word编辑器内容时出错:', error);
+                    });
+                }, 500);
               } else {
                 console.log('不满足在initWordEditor中设置内容的条件:',
                   'isEditing:', this.isEditing,
                   'article存在:', !!this.article, 
                   'content存在:', !!(this.article && this.article.content));
               }
+              
+              // 添加编辑器内容变化监听，确保滚动正常
+              setTimeout(() => {
+                const qlEditor = document.querySelector('.ql-editor');
+                if (qlEditor) {
+                  // 创建MutationObserver监听内容变化
+                  const observer = new MutationObserver(() => {
+                    // 确保编辑器容器高度适应内容
+                    if (qlEditor.scrollHeight > 750) {
+                      qlEditor.style.height = 'auto';
+                      qlEditor.style.minHeight = qlEditor.scrollHeight + 'px';
+                    }
+                  });
+                  
+                  // 开始监听
+                  observer.observe(qlEditor, {
+                    childList: true,
+                    subtree: true,
+                    characterData: true
+                  });
+                }
+              }, 1000);
               
               // 监听编辑器内容保存事件
               this.$refs.wordEditorContainer.addEventListener('word-editor-save', (event) => {
@@ -380,27 +461,84 @@ export default {
       this.$router.push('/admin/articles');
     },
     
-    // 带重试机制的编辑器初始化
+    // 带重试机制的编辑器初始化，返回Promise
     initEditorWithRetry(attemptCount) {
       console.log(`尝试初始化Word编辑器，第${attemptCount + 1}次尝试`);
       
-      // 最多尝试5次，每次间隔300ms
-      if (attemptCount >= 5) {
-        console.error('多次尝试后仍未找到wordEditorContainer引用，放弃初始化');
-        return;
-      }
-      
-      // 检查DOM元素是否已渲染
-      if (this.$refs.wordEditorContainer) {
-        console.log('找到wordEditorContainer引用，开始初始化');
-        this.initWordEditor();
+      return new Promise((resolve) => {
+        // 最多尝试5次，每次间隔300ms
+        if (attemptCount >= 5) {
+          console.error('多次尝试后仍未找到wordEditorContainer引用，放弃初始化');
+          resolve(false); // 虽然失败但仍然resolve以避免阻塞后续操作
+          return;
+        }
         
-        // 初始化后再次检查是否有内容需要设置
-        if (this.isEditing && this.article && this.article.content && this.wordEditor) {
-          console.log('重试机制检测到文章内容已加载，设置到Word编辑器中');
-          // 使用延迟确保编辑器已完全初始化
+        // 检查DOM元素是否已渲染
+        if (this.$refs.wordEditorContainer) {
+          console.log('找到wordEditorContainer引用，开始初始化');
+          
+          // 初始化容器元素
+          const containerId = this.$refs.wordEditorContainer.id || 'word-editor-container';
+          this.$refs.wordEditorContainer.id = containerId;
+          
+          // 初始化编辑器并处理内容设置
+          initializeWordEditor(containerId)
+            .then(editorInstance => {
+              console.log('Word编辑器创建成功');
+              this.wordEditor = editorInstance;
+              
+              // 处理内容加载
+              this.handleEditorContentLoading();
+              
+              // 初始化成功
+              resolve(true);
+            })
+            .catch(error => {
+              console.error('Word编辑器初始化失败:', error);
+              resolve(false);
+            });
+        } else {
+          console.log(`未找到wordEditorContainer引用，300ms后将进行第${attemptCount + 2}次尝试`);
           setTimeout(() => {
-            try {
+            this.initEditorWithRetry(attemptCount + 1)
+              .then(resolve);
+          }, 300);
+        }
+      });
+    },
+    
+    // 处理编辑器内容加载
+    handleEditorContentLoading() {
+      // 初始化后检查是否有内容需要设置
+      if (this.isEditing && this.article && this.article.content && this.wordEditor) {
+        console.log('检测到文章内容已加载，设置到Word编辑器中');
+        // 使用小延迟确保编辑器已完全初始化
+        setTimeout(() => {
+          try {
+            console.log(`设置内容到Word编辑器，内容长度: ${this.article.content.length}`);
+            // 使用兼容层设置内容
+            const compatEditor = createCompatibilityLayer(this.wordEditor);
+            const fixedContent = fixWordEditorContent(this.article.content);
+            
+            compatEditor.setContents(fixedContent)
+              .then(() => {
+                console.log('Word编辑器内容设置成功');
+                // 标记加载状态以便跟踪
+                window.editorContentLoaded = true;
+              })
+              .catch(error => {
+                console.error('设置Word编辑器内容时出错:', error);
+              });
+          } catch (error) {
+            console.error('设置Word编辑器内容时出错:', error);
+          }
+        }, 200); // 减少延迟时间，因为我们已经优化了加载流程
+      } else if (this.isEditing && this.article && this._contentReadyForEditor && this.wordEditor) {
+        // 处理文章内容先于编辑器准备好的情况
+        console.log('检测到内容已准备好，Word编辑器刚刚初始化完成，现在设置内容');
+        setTimeout(() => {
+          try {
+            if (this.article.content) {
               console.log(`设置内容到Word编辑器，内容长度: ${this.article.content.length}`);
               // 使用兼容层设置内容
               const compatEditor = createCompatibilityLayer(this.wordEditor);
@@ -409,45 +547,18 @@ export default {
               compatEditor.setContents(fixedContent)
                 .then(() => {
                   console.log('Word编辑器内容设置成功');
+                  window.editorContentLoaded = true;
                 })
                 .catch(error => {
                   console.error('设置Word编辑器内容时出错:', error);
                 });
-            } catch (error) {
-              console.error('设置Word编辑器内容时出错:', error);
             }
-          }, 300); // 增加延迟时间以确保编辑器完全准备好
-        } else if (this.isEditing && this.article && this._contentReadyForEditor && this.wordEditor) {
-          // 处理文章内容先于编辑器准备好的情况
-          console.log('检测到内容已准备好，Word编辑器刚刚初始化完成，现在设置内容');
-          setTimeout(() => {
-            try {
-              if (this.article.content) {
-                console.log(`设置内容到Word编辑器，内容长度: ${this.article.content.length}`);
-                // 使用兼容层设置内容
-                const compatEditor = createCompatibilityLayer(this.wordEditor);
-                const fixedContent = fixWordEditorContent(this.article.content);
-                
-                compatEditor.setContents(fixedContent)
-                  .then(() => {
-                    console.log('Word编辑器内容设置成功');
-                  })
-                  .catch(error => {
-                    console.error('设置Word编辑器内容时出错:', error);
-                  });
-              }
-            } catch (error) {
-              console.error('设置Word编辑器内容时出错:', error);
-            }
-          }, 300);
-        } else {
-          console.log('暂不满足设置内容条件，将在fetchArticle中再次尝试');
-        }
+          } catch (error) {
+            console.error('设置Word编辑器内容时出错:', error);
+          }
+        }, 200);
       } else {
-        console.log(`未找到wordEditorContainer引用，300ms后将进行第${attemptCount + 2}次尝试`);
-        setTimeout(() => {
-          this.initEditorWithRetry(attemptCount + 1);
-        }, 300);
+        console.log('暂不满足设置内容条件，将在fetchArticle中再次尝试');
       }
     },
     
@@ -475,31 +586,126 @@ export default {
       }
     },
     
-    // 带重试机制的内容设置，用于编辑器后于内容加载的情况
-    retrySetContentWhenEditorReady(attemptCount = 0) {
-      // 最多尝试10次，每次间隔500ms
-      if (attemptCount >= 10) {
-        console.error('多次尝试后编辑器仍未初始化，无法设置内容');
-        return;
-      }
+    /**
+     * 处理自动保存
+     * @param {Object} content 编辑器内容对象，包含html和text属性
+     * @returns {Promise} 保存操作的Promise
+     */
+    handleAutoSave(content) {
+      console.log('触发自动保存，内容长度:', content.html.length);
       
-      if (this.quill) {
-        console.log('编辑器已就绪，设置内容');
-        try {
-          this.$nextTick(() => {
-            if (this.article && this.article.content) {
-              this.quill.root.innerHTML = this.article.content;
-              console.log('重试后成功设置内容，长度:', this.article.content.length);
-            }
-          });
-        } catch (error) {
-          console.error('重试设置内容时出错:', error);
-        }
+      // 只有在内容变化时才自动保存
+      if (this.article.content !== content.html) {
+        // 更新本地内容
+        this.article.content = content.html;
+        
+        // 创建自动保存请求
+        return new Promise((resolve, reject) => {
+          // 如果正在进行主动保存，则不执行自动保存
+          if (this.saving) {
+            console.log('检测到正在主动保存，跳过自动保存');
+            resolve();
+            return;
+          }
+          
+          // 准备表单数据，但只包含必要的内容
+          const formData = new FormData();
+          formData.append('content', content.html);
+          formData.append('_method', 'PUT'); // 使用PUT方法
+          formData.append('autosave', 'true'); // 标记为自动保存
+          
+          // 只有在编辑模式下且有文章ID时才进行保存
+          if (this.isEditing && this.articleId) {
+            axios.post(`/api/articles/${this.articleId}/autosave`, formData)
+              .then(response => {
+                if (response.data.success) {
+                  console.log('自动保存成功:', response.data.message);
+                  resolve();
+                } else {
+                  console.error('自动保存失败:', response.data.message);
+                  reject(new Error(response.data.message));
+                }
+              })
+              .catch(error => {
+                console.error('自动保存出错:', error);
+                reject(error);
+              });
+          } else if (!this.isEditing && this.articleId) {
+            // 如果是新建文章并且已经有临时ID，则使用此ID保存
+            axios.post(`/api/articles/${this.articleId}/autosave`, formData)
+              .then(response => {
+                if (response.data.success) {
+                  console.log('新文章自动保存成功:', response.data.message);
+                  resolve();
+                } else {
+                  console.error('新文章自动保存失败:', response.data.message);
+                  reject(new Error(response.data.message));
+                }
+              })
+              .catch(error => {
+                console.error('新文章自动保存出错:', error);
+                reject(error);
+              });
+          } else if (!this.isEditing && !this.articleId && this.article.title) {
+            // 如果是新建文章且有标题，创建一个草稿
+            formData.append('title', this.article.title);
+            formData.append('draft', 'true');
+            
+            axios.post('/api/articles/draft', formData)
+              .then(response => {
+                if (response.data.success) {
+                  console.log('草稿创建成功:', response.data.message);
+                  // 保存文章ID，更新URL，但不改变编辑状态
+                  if (response.data.articleId) {
+                    this.articleId = response.data.articleId;
+                    history.replaceState(null, '', `/admin/articles/create/${this.articleId}`);
+                  }
+                  resolve();
+                } else {
+                  console.error('草稿创建失败:', response.data.message);
+                  reject(new Error(response.data.message));
+                }
+              })
+              .catch(error => {
+                console.error('草稿创建出错:', error);
+                reject(error);
+              });
+          } else {
+            // 没有标题或其他条件不满足，跳过自动保存
+            console.log('条件不满足，跳过自动保存（没有文章ID或标题）');
+            resolve();
+          }
+        });
       } else {
-        console.log(`编辑器尚未初始化，500ms后进行第${attemptCount + 2}次尝试`);
-        setTimeout(() => {
-          this.retrySetContentWhenEditorReady(attemptCount + 1);
-        }, 500);
+        // 内容没有变化，不需要保存
+        console.log('内容未变化，无需自动保存');
+        return Promise.resolve();
+      }
+    },
+    
+    /**
+     * 处理编辑器全屏状态改变
+     * @param {Boolean} isFullscreen 是否为全屏状态
+     */
+    handleFullscreenChange(isFullscreen) {
+      // 更新编辑器配置
+      this.wordEditorConfig.isFullscreen = isFullscreen;
+      
+      if (isFullscreen) {
+        // 进入全屏模式时的处理
+        // 可以根据需要调整UI元素，例如隐藏不需要的元素
+        document.querySelector('.app-header')?.classList.add('hidden-in-fullscreen');
+        document.querySelector('.app-footer')?.classList.add('hidden-in-fullscreen');
+        
+        // 通知其他组件
+        this.$emit('editor-fullscreen', true);
+      } else {
+        // 退出全屏模式时的处理
+        document.querySelector('.app-header')?.classList.remove('hidden-in-fullscreen');
+        document.querySelector('.app-footer')?.classList.remove('hidden-in-fullscreen');
+        
+        // 通知其他组件
+        this.$emit('editor-fullscreen', false);
       }
     },
   },
@@ -525,8 +731,17 @@ export default {
   mounted() {
     console.log('EditArticle组件mounted钩子执行');
     
-    // 先初始化编辑器
-    this.initEditorWithRetry(0);
+    // 先检查是否有预加载的编辑器资源
+    const isPreloaded = window.editorResources && window.editorResources.loaded;
+    if (isPreloaded) {
+      console.log('检测到预加载的编辑器资源，可以快速初始化');
+    } else {
+      console.log('未检测到预加载资源，将使用标准初始化流程');
+    }
+    
+    // 并行处理：同时初始化编辑器和加载文章内容
+    // 这样可以更高效地利用时间，减少用户等待
+    const editorPromise = this.initEditorWithRetry(0);
     
     // 如果是编辑模式，加载文章内容
     if (this.isEditing) {
@@ -534,6 +749,16 @@ export default {
       this.fetchArticle();
     } else {
       console.log('新建文章模式，无需加载文章内容');
+    }
+    
+    // 标记编辑器是否使用了预加载的资源，用于性能统计
+    if (window.performance && window.performance.mark) {
+      window.performance.mark('editor-init-start');
+      editorPromise.then(() => {
+        window.performance.mark('editor-init-end');
+        window.performance.measure('editor-initialization', 'editor-init-start', 'editor-init-end');
+        console.log('编辑器初始化完成，使用了预加载资源:', isPreloaded);
+      });
     }
   },
   
@@ -657,12 +882,13 @@ export default {
             </div>
           </div>
           
-          <div class="form-group">
-            <label for="content" class="form-label">文章内容 (Microsoft Word编辑器)</label>
+          <div class="form-group editor-wrapper sticky-toolbar-wrapper">
+            <label for="content" class="form-label">文章内容 (富文本编辑器)</label>
             <div class="word-editor-container">
-              <!-- Word编辑器容器 -->
-              <div ref="wordEditorContainer" id="word-editor-container"></div>
+              <!-- 富文本编辑器容器 -->
+              <div ref="wordEditorContainer" id="word-editor-container" class="editor-scrollable-content"></div>
             </div>
+            <div class="editor-spacer"></div>
           </div>
           
           <div class="form-group">

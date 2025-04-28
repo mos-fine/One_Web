@@ -1,0 +1,162 @@
+/* 用户资料页面样式 */
+.user-profile {
+  max-width: 100%;
+}
+
+.profile-container {
+  background: #fff;
+  border-radius: 8px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+  padding: 20px;
+  margin: 20px 0;
+}
+
+.profile-section {
+  display: flex;
+  flex-direction: column;
+}
+
+@media (min-width: 768px) {
+  .profile-section {
+    flex-direction: row;
+  }
+}
+
+.profile-avatar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+@media (min-width: 768px) {
+  .profile-avatar {
+    margin-right: 30px;
+    margin-bottom: 0;
+    width: 200px;
+    flex-shrink: 0;
+  }
+}
+
+.profile-avatar img {
+  width: 160px;
+  height: 160px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid #f0f0f0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.avatar-actions {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.profile-info {
+  flex-grow: 1;
+}
+
+.profile-name {
+  font-size: 24px;
+  margin: 0 0 10px 0;
+  color: #333;
+}
+
+.profile-username {
+  font-size: 14px;
+  color: #777;
+  margin-bottom: 15px;
+}
+
+.profile-detail {
+  display: flex;
+  align-items: center;
+  margin-bottom: 10px;
+  font-size: 16px;
+}
+
+.profile-detail i {
+  width: 20px;
+  margin-right: 10px;
+  color: #666;
+}
+
+.profile-bio {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #555;
+  line-height: 1.6;
+}
+
+.profile-bio-empty {
+  margin-top: 20px;
+  padding: 15px;
+  border-radius: 4px;
+  background-color: #f9f9f9;
+  color: #aaa;
+  font-style: italic;
+}
+
+.profile-actions {
+  margin-top: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.profile-edit-form {
+  max-width: 600px;
+  padding-top: 10px;
+}
+
+.form-textarea {
+  width: 100%;
+  padding: 10px;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 14px;
+  transition: border-color 0.3s;
+  resize: vertical;
+}
+
+.form-textarea:focus {
+  border-color: #333;
+  outline: none;
+}
+
+/* 消息提示样式 */
+.message {
+  padding: 12px 15px;
+  margin-bottom: 20px;
+  border-radius: 4px;
+  font-weight: 500;
+  animation: fadeIn 0.3s ease-out;
+}
+
+.success-message {
+  color: #155724;
+  background-color: #d4edda;
+  border: 1px solid #c3e6cb;
+}
+
+.error-message {
+  color: #721c24;
+  background-color: #f8d7da;
+  border: 1px solid #f5c6cb;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}

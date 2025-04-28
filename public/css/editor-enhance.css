@@ -1,0 +1,97 @@
+/* 编辑器增强样式 */
+
+/* 整体编辑器包装器 */
+.editor-wrapper {
+  margin-bottom: 40px;
+  position: relative;
+}
+
+/* 编辑器工具栏固定支持 */
+.sticky-toolbar-wrapper {
+  position: relative;
+  z-index: 1;
+}
+
+.editor-spacer {
+  height: 20px;
+}
+
+/* 可滚动内容区域 */
+.editor-scrollable-content {
+  overflow-y: auto;
+  min-height: 500px;
+}
+
+/* 确保编辑器内容区域可以垂直扩展 */
+.ai-editor-container {
+  overflow: visible !important;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  position: relative;
+}
+
+/* 确保编辑器能够容纳超长内容 */
+.ai-editor .ql-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+}
+
+.ai-editor .ql-editor {
+  flex: 1;
+  overflow-y: auto !important;
+  min-height: 600px !important;
+  height: auto !important;
+  padding: 20px;
+}
+
+/* 防止编辑器内容溢出 */
+.ai-editor {
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+/* 工具栏固定 */
+.ai-editor .ql-toolbar {
+  flex: 0 0 auto;
+  position: sticky !important;
+  top: 0 !important;
+  z-index: 100 !important;
+  background-color: #fff;
+  border-bottom: 1px solid #ccc;
+  padding: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+  width: 100%;
+  transition: box-shadow 0.3s ease, transform 0.2s ease, opacity 0.2s ease;
+  will-change: transform, opacity;
+}
+
+/* 确保工具栏父容器能够支持sticky定位 */
+.ai-editor .ql-container {
+  overflow: visible !important;
+}
+
+/* 确保整个编辑器容器支持sticky工具栏 */
+.ai-editor-container {
+  contain: layout;
+}
+
+/* 调整图片大小控制器 */
+.ai-editor .image-resizer {
+  display: block;
+  position: absolute;
+}
+
+/* 响应式适配 */
+@media (max-width: 768px) {
+  .ai-editor-container {
+    height: 500px !important;
+  }
+  
+  .ai-editor .ql-editor {
+    min-height: 400px !important;
+  }
+}

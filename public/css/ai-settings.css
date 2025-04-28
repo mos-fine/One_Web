@@ -1,0 +1,637 @@
+/**
+ * AI设置管理界面样式
+ */
+
+.ai-settings-container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+.page-title {
+  font-size: 28px;
+  margin-bottom: 20px;
+  color: #333;
+  border-bottom: 2px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* 状态卡片 */
+.status-card {
+  background-color: #f8f9fa;
+  border-radius: 10px;
+  padding: 20px;
+  margin-bottom: 25px;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+  transition: all 0.3s ease;
+}
+
+.status-card.status-enabled {
+  border-left: 5px solid #28a745;
+}
+
+.status-card.status-disabled {
+  border-left: 5px solid #dc3545;
+  opacity: 0.8;
+}
+
+.status-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.status-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.status-body {
+  display: flex;
+  flex-direction: column;
+}
+
+.status-info {
+  display: flex;
+  align-items: center;
+  font-size: 16px;
+  margin-bottom: 10px;
+}
+
+.status-info i {
+  margin-right: 10px;
+  font-size: 20px;
+}
+
+.status-description {
+  color: #666;
+  font-size: 14px;
+}
+
+/* 开关按钮 */
+.switch {
+  position: relative;
+  display: inline-block;
+  width: 60px;
+  height: 30px;
+}
+
+.switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: .4s;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 22px;
+  width: 22px;
+  left: 4px;
+  bottom: 4px;
+  background-color: white;
+  transition: .4s;
+}
+
+input:checked + .slider {
+  background-color: #2196F3;
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px #2196F3;
+}
+
+input:checked + .slider:before {
+  transform: translateX(30px);
+}
+
+.slider.round {
+  border-radius: 34px;
+}
+
+.slider.round:before {
+  border-radius: 50%;
+}
+
+/* 配置区域 */
+.config-section {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 25px;
+  transition: opacity 0.3s ease;
+}
+
+.config-section.disabled {
+  opacity: 0.6;
+  pointer-events: none;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+  color: #444;
+}
+
+.form-group input[type="text"],
+.form-group input[type="password"],
+.form-group input[type="number"],
+.form-group select,
+.form-group textarea {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  color: #333;
+  background-color: #f9f9f9;
+  transition: all 0.3s;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #4a89dc;
+  box-shadow: 0 0 0 3px rgba(74, 137, 220, 0.1);
+  background-color: #fff;
+}
+
+/* 自定义模型输入样式 */
+.model-selection-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.custom-model-input {
+  margin-top: 5px;
+  border-left: 3px solid #4a89dc !important;
+  background-color: #f0f5ff !important;
+  animation: fadeIn 0.3s;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-5px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.field-hint {
+  font-size: 12px;
+  color: #888;
+  margin-top: 5px;
+}
+
+.field-description {
+  margin-top: 8px;
+  font-size: 14px;
+  color: #666;
+  line-height: 1.5;
+}
+
+.feature-toggle {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+/* 模型配置区域 */
+.model-config, 
+.ai-features, 
+.usage-limits {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.model-config h3, 
+.ai-features h3, 
+.usage-limits h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+/* 复选框组 */
+.checkbox-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 10px 0;
+}
+
+.checkbox-item {
+  display: flex;
+  align-items: center;
+  background-color: #f3f3f3;
+  padding: 8px 15px;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.checkbox-item:hover {
+  background-color: #e9e9e9;
+}
+
+.checkbox-item input {
+  margin-right: 8px;
+}
+
+.checkbox-group.disabled .checkbox-item {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* 安全模式信息样式 */
+.secure-mode-info {
+  display: flex;
+  background-color: #e8f4fd;
+  padding: 15px;
+  border-radius: 8px;
+  align-items: flex-start;
+}
+
+.secure-mode-info i {
+  font-size: 24px;
+  color: #0d6efd;
+  margin-right: 15px;
+  margin-top: 3px;
+}
+
+.secure-mode-info strong {
+  display: block;
+  margin-bottom: 8px;
+  color: #0d6efd;
+}
+
+.secure-mode-info p {
+  margin: 0;
+  font-size: 14px;
+  line-height: 1.5;
+  color: #555;
+}
+
+/* 按钮样式 */
+.action-buttons {
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px;
+  margin-bottom: 30px;
+}
+
+.btn {
+  padding: 10px 25px;
+  border: none;
+  border-radius: 6px;
+  font-size: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-decoration: none;
+}
+
+.btn i {
+  margin-right: 8px;
+}
+
+.btn-primary {
+  background-color: #4a89dc;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #3b7dd8;
+}
+
+.btn-primary:disabled {
+  background-color: #97bef0;
+  cursor: not-allowed;
+}
+
+.btn-secondary {
+  background-color: #f3f3f3;
+  color: #333;
+}
+
+.btn-secondary:hover {
+  background-color: #e6e6e6;
+}
+
+.btn-test {
+  background-color: #5a67d8;
+  color: white;
+  margin-left: auto; /* 将测试按钮推到右侧 */
+}
+
+.btn-test:hover {
+  background-color: #4c56b8;
+}
+
+/* 使用统计样式 */
+.usage-stats {
+  margin-top: 30px;
+  margin-bottom: 30px;
+}
+
+.usage-stats h3 {
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+
+.stats-loading {
+  text-align: center;
+  padding: 20px;
+  color: #777;
+  font-size: 16px;
+}
+
+.stats-loading i {
+  margin-right: 8px;
+}
+
+.stats-content {
+  display: flex;
+  gap: 20px;
+  flex-wrap: wrap;
+}
+
+.stats-card {
+  flex: 1;
+  min-width: 220px;
+  background-color: #fff;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+}
+
+.stats-card-title {
+  color: #666;
+  font-size: 14px;
+  margin-bottom: 10px;
+}
+
+.stats-card-title i {
+  margin-right: 5px;
+}
+
+.stats-card-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+  margin-bottom: 5px;
+}
+
+.stats-card-label {
+  color: #888;
+  font-size: 13px;
+}
+
+/* 测试区域样式 */
+.test-area {
+  background-color: #fff;
+  border-radius: 10px;
+  padding: 25px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  margin-bottom: 30px;
+}
+
+.test-area h3 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 18px;
+  color: #333;
+}
+
+.test-prompt {
+  margin-bottom: 15px;
+}
+
+.test-prompt label {
+  display: block;
+  margin-bottom: 8px;
+  font-weight: 600;
+}
+
+.test-prompt textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 15px;
+  resize: vertical;
+  min-height: 100px;
+}
+
+.test-action {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 20px;
+}
+
+.test-action button {
+  background-color: #5a67d8;
+  color: white;
+  padding: 10px 20px;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 15px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  transition: background-color 0.3s;
+}
+
+.test-action button:hover {
+  background-color: #4c56b8;
+}
+
+.test-action button:disabled {
+  background-color: #b2b7e5;
+  cursor: not-allowed;
+}
+
+.test-result {
+  background-color: #f9f9f9;
+  border-radius: 8px;
+  padding: 20px;
+}
+
+.test-result h4 {
+  margin-top: 0;
+  margin-bottom: 15px;
+  font-size: 16px;
+  color: #444;
+}
+
+.test-response {
+  background-color: #fff;
+  border: 1px solid #eee;
+  border-radius: 6px;
+  padding: 15px;
+  font-size: 15px;
+  line-height: 1.6;
+  color: #333;
+  white-space: pre-line;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+/* 辅助类 */
+.text-success {
+  color: #28a745;
+}
+
+.text-danger {
+  color: #dc3545;
+}
+
+.text-warning {
+  color: #ffc107;
+}
+
+.text-info {
+  color: #17a2b8;
+}
+
+/* 暗色模式支持 */
+.dark-mode .ai-settings-container {
+  color: #f0f0f0;
+}
+
+.dark-mode .page-title {
+  color: #f0f0f0;
+  border-bottom-color: #444;
+}
+
+.dark-mode .status-card {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.dark-mode .status-description {
+  color: #aaa;
+}
+
+.dark-mode .config-section {
+  background-color: #222;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .form-group label {
+  color: #ddd;
+}
+
+.dark-mode .form-group input[type="text"],
+.dark-mode .form-group input[type="password"],
+.dark-mode .form-group input[type="number"],
+.dark-mode .form-group select,
+.dark-mode .form-group textarea {
+  background-color: #333;
+  border-color: #444;
+  color: #f0f0f0;
+}
+
+.dark-mode .form-group input:focus,
+.dark-mode .form-group select:focus,
+.dark-mode .form-group textarea:focus {
+  border-color: #5a8fd6;
+  background-color: #3a3a3a;
+}
+
+.dark-mode .field-hint {
+  color: #999;
+}
+
+.dark-mode .field-description {
+  color: #aaa;
+}
+
+.dark-mode .model-config,
+.dark-mode .ai-features,
+.dark-mode .usage-limits {
+  background-color: #2d2d2d;
+}
+
+.dark-mode .model-config h3,
+.dark-mode .ai-features h3,
+.dark-mode .usage-limits h3 {
+  color: #e0e0e0;
+  border-bottom-color: #444;
+}
+
+.dark-mode .checkbox-item {
+  background-color: #333;
+}
+
+.dark-mode .checkbox-item:hover {
+  background-color: #3a3a3a;
+}
+
+.dark-mode .secure-mode-info {
+  background-color: #1a365d;
+}
+
+.dark-mode .secure-mode-info p {
+  color: #ccc;
+}
+
+.dark-mode .btn-secondary {
+  background-color: #444;
+  color: #f0f0f0;
+}
+
+.dark-mode .btn-secondary:hover {
+  background-color: #505050;
+}
+
+.dark-mode .stats-card {
+  background-color: #2d2d2d;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .stats-card-value {
+  color: #f0f0f0;
+}
+
+.dark-mode .test-area {
+  background-color: #222;
+}
+
+.dark-mode .test-result {
+  background-color: #2d2d2d;
+}
+
+.dark-mode .test-response {
+  background-color: #333;
+  border-color: #444;
+  color: #f0f0f0;
+}

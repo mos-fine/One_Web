@@ -26,7 +26,10 @@ const authController = {
         id: admin.id,
         username: admin.username,
         name: admin.name,
-        avatar: admin.avatar
+        avatar: admin.avatar,
+        email: admin.email,
+        phone: admin.phone,
+        bio: admin.bio
       };
 
       res.json({
@@ -36,7 +39,10 @@ const authController = {
           id: admin.id,
           username: admin.username,
           name: admin.name,
-          avatar: admin.avatar
+          avatar: admin.avatar,
+          email: admin.email,
+          phone: admin.phone,
+          bio: admin.bio
         }
       });
     });
@@ -62,6 +68,31 @@ const authController = {
       });
     }
   },
+  
+  // 获取管理员信息（无论是否已登录）
+  getAdminInfo: (req, res) => {
+    Admin.getFirst((err, results) => {
+      if (err) {
+        return res.status(500).json({ success: false, message: '服务器错误' });
+      }
+      
+      if (results.length === 0) {
+        return res.json({
+          success: false,
+          message: '尚未设置管理员信息'
+        });
+      }
+      
+      const admin = results[0];
+      // 不返回密码
+      const { password, ...safeData } = admin;
+      
+      res.json({
+        success: true,
+        admin: safeData
+      });
+    });
+  },
 
   // 初始化管理员账户
   initAdmin: (req, res) => {
@@ -80,7 +111,11 @@ const authController = {
       const adminData = {
         username: 'admin',  // 默认管理员用户名
         password: 'admin123', // 默认密码
-        name: '网站管理员'
+        name: '网站管理员',
+        avatar: '/images/avatar.png',
+        email: '',
+        phone: '',
+        bio: '这是网站管理员的个人简介'
       };
 
       Admin.create(adminData, (err, result) => {

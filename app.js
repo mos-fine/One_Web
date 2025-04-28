@@ -3,6 +3,7 @@ const express = require('express');
 const bodyParser = require('body-parser');
 const session = require('express-session');
 const path = require('path');
+const fs = require('fs');
 const cors = require('cors');
 
 // 初始化应用
@@ -21,6 +22,12 @@ app.use(session({
   cookie: { secure: false, maxAge: 24 * 60 * 60 * 1000 } // 24小时
 }));
 
+// 确保上传目录存在
+const uploadsAvatarDir = path.join(__dirname, 'public', 'uploads', 'avatars');
+if (!fs.existsSync(uploadsAvatarDir)) {
+  fs.mkdirSync(uploadsAvatarDir, { recursive: true });
+}
+
 // 设置视图引擎
 app.set('view engine', 'ejs');
 app.set('views', path.join(__dirname, 'server/views'));
@@ -30,12 +37,14 @@ const articleRoutes = require('./server/routes/articleRoutes');
 const adminRoutes = require('./server/routes/adminRoutes');
 const authRoutes = require('./server/routes/authRoutes');
 const socialMediaRoutes = require('./server/routes/socialMediaRoutes');
+const aiRoutes = require('./server/routes/aiRoutes');
 
 // 使用路由
 app.use('/api/articles', articleRoutes);
 app.use('/api/admin', adminRoutes);
 app.use('/api/auth', authRoutes);
 app.use('/api/social', socialMediaRoutes);
+app.use('/api/ai', aiRoutes);
 
 // 前端路由 - 所有不匹配API的请求都返回主页
 app.get('*', (req, res) => {

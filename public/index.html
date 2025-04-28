@@ -7,12 +7,23 @@
   <link rel="stylesheet" href="/css/style.css">
   <link rel="stylesheet" href="/css/reader-mode.css">
   <link rel="stylesheet" href="/css/article-modern.css">
+  <link rel="stylesheet" href="/css/user-profile.css">
+  <link rel="stylesheet" href="/css/avatar.css">
+  <link rel="stylesheet" href="/css/tooltip.css">
+  <link rel="stylesheet" href="/css/dark-mode.css">
+  <link rel="stylesheet" href="/css/dark-mode-nav.css">
+  <link rel="stylesheet" href="/css/editor-enhance.css">
+  <link rel="stylesheet" href="/css/fullscreen-editor.css">
+  <link rel="stylesheet" href="/css/ai-settings.css">
   <!-- 引入字体图标 -->
   <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
   <!-- 代码高亮样式 -->
   <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/styles/github.min.css">
   <!-- AiEditor 样式 -->
   <link rel="stylesheet" href="/js/libs/aieditor/style.css">
+  
+  <!-- 预加载AI编辑器配置 -->
+  <script src="/js/ai-editor-preload.js"></script>
 </head>
 <body>
   <div id="app">
@@ -26,10 +37,15 @@
   <script src="https://cdn.bootcdn.net/ajax/libs/marked/4.2.12/marked.min.js"></script>
   <script src="https://cdn.bootcdn.net/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
   
-  <!-- AiEditor JS 通过WordEditor.js动态加载 -->
+  <!-- 编辑器预加载脚本（尽早加载以减少等待时间） -->
+  <script src="/js/editor-preload.js"></script>
   
   <!-- Word编辑器样式（保留原有样式兼容） -->
   <link href="/css/word-editor.css" rel="stylesheet">
+  
+  <!-- 编辑器优化脚本 -->
+  <script src="/js/editor-optimizer.js"></script>
+  <script src="/js/toolbar-sticky.js"></script>
   
   <!-- 引入自定义脚本 -->
   <script src="/js/main.js" type="module"></script>

@@ -246,7 +246,78 @@ const articleController = {
       
       res.json({ success: true, articles: results });
     });
-  }
+  },
+
+  // 处理文章自动保存
+  autoSaveArticle: (req, res) => {
+    // 检查用户是否已登录
+    if (!req.session.admin) {
+      return res.status(401).json({ success: false, message: '未授权' });
+    }
+
+    const id = req.params.id;
+    const content = req.body.content;
+
+    if (!content) {
+      return res.status(400).json({ success: false, message: '未提供内容' });
+    }
+
+    // 只更新内容字段，不改变其他字段
+    Article.updateContent(id, content, (err, result) => {
+      if (err) {
+        console.error('自动保存失败:', err);
+        return res.status(500).json({ success: false, message: '自动保存失败', error: err });
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).json({ success: false, message: '文章不存在' });
+      }
+      
+      res.json({ 
+        success: true, 
+        message: '内容已自动保存', 
+        timestamp: new Date().toISOString() 
+      });
+    });
+  },
+  
+  // 创建草稿文章
+  createDraft: (req, res) => {
+    // 检查用户是否已登录
+    if (!req.session.admin) {
+      return res.status(401).json({ success: false, message: '未授权' });
+    }
+    
+    const { title, content } = req.body;
+    
+    if (!title || !title.trim()) {
+      return res.status(400).json({ success: false, message: '标题不能为空' });
+    }
+    
+    // 创建草稿文章对象
+    const draft = {
+      title: title.trim(),
+      content: content || '',
+      published: false,
+      category: '草稿',
+      tags: '',
+      created_at: new Date()
+    };
+    
+    Article.create(draft, (err, result) => {
+      if (err) {
+        console.error('创建草稿失败:', err);
+        return res.status(500).json({ success: false, message: '创建草稿失败', error: err });
+      }
+      
+      const newArticleId = result.insertId;
+      res.json({ 
+        success: true, 
+        message: '草稿已创建', 
+        articleId: newArticleId 
+      });
+    });
+  },
 };
 
 module.exports = articleController;

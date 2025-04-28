@@ -66,4 +66,10 @@ router.put('/:id', upload.single('cover_image'), articleController.updateArticle
 // 删除文章 - 需要管理员权限
 router.delete('/:id', articleController.deleteArticle);
 
+// 自动保存文章内容 - 需要管理员权限
+router.post('/:id/autosave', articleController.autoSaveArticle);
+
+// 创建草稿 - 需要管理员权限
+router.post('/draft', articleController.createDraft);
+
 module.exports = router;

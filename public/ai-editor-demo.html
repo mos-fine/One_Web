@@ -1,0 +1,344 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="csrf-token" content="{{csrfToken}}">
+    <title>AiEditor 智能编辑器演示</title>
+    <link rel="stylesheet" href="/css/style.css">
+    <link rel="stylesheet" href="/css/editor-enhance.css">
+    <link rel="stylesheet" href="/css/fullscreen-editor.css">
+    <!-- 引入AiEditor样式 -->
+    <link rel="stylesheet" href="/js/libs/aieditor/style.css">
+    <!-- 引入字体图标 -->
+    <link rel="stylesheet" href="https://cdn.bootcdn.net/ajax/libs/font-awesome/5.15.4/css/all.min.css">
+    <style>
+        .editor-container {
+            width: 100%;
+            max-width: 1200px;
+            margin: 30px auto;
+            padding: 20px;
+            box-shadow: 0 0 10px rgba(0,0,0,0.1);
+            border-radius: 8px;
+            background-color: #fff;
+        }
+        
+        .editor-header {
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .editor-title {
+            font-size: 24px;
+            color: #333;
+            margin: 0 0 10px 0;
+        }
+        
+        .editor-subtitle {
+            font-size: 16px;
+            color: #666;
+            margin: 0;
+        }
+        
+        #aiEditor {
+            min-height: 500px;
+            border: 1px solid #eaeaea;
+        }
+        
+        .editor-actions {
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .editor-actions button {
+            padding: 10px 20px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+        
+        .primary-btn {
+            background-color: #4CAF50;
+            color: white;
+        }
+        
+        .primary-btn:hover {
+            background-color: #3e8e41;
+        }
+        
+        .secondary-btn {
+            background-color: #f4f4f4;
+            color: #333;
+        }
+        
+        .secondary-btn:hover {
+            background-color: #e7e7e7;
+        }
+        
+        #ai-loading-indicator {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 10px 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            z-index: 1000;
+            display: none;
+        }
+        
+        #editor-error-container {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #ffebee;
+            color: #c62828;
+            border-radius: 4px;
+            display: none;
+        }
+        
+        .ai-config-selector {
+            margin-bottom: 20px;
+        }
+        
+        .ai-config-selector select {
+            padding: 8px 12px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+            font-size: 16px;
+            min-width: 200px;
+        }
+        
+        .dark-mode {
+            background-color: #222;
+            color: #f0f0f0;
+        }
+        
+        .dark-mode .editor-container {
+            background-color: #333;
+            box-shadow: 0 0 10px rgba(0,0,0,0.3);
+        }
+        
+        .dark-mode .editor-title {
+            color: #f0f0f0;
+        }
+        
+        .dark-mode .editor-subtitle {
+            color: #ccc;
+        }
+        
+        .dark-mode #aiEditor {
+            border-color: #555;
+        }
+        
+        .dark-mode .secondary-btn {
+            background-color: #444;
+            color: #f0f0f0;
+        }
+        
+        .dark-mode .secondary-btn:hover {
+            background-color: #555;
+        }
+    </style>
+</head>
+<body>
+    <div class="editor-container">
+        <div class="editor-header">
+            <h1 class="editor-title">AiEditor 智能编辑器</h1>
+            <p class="editor-subtitle">集成了多种AI功能，让写作更高效</p>
+        </div>
+        
+        <div class="ai-config-selector">
+            <label for="ai-model-select">选择AI模型：</label>
+            <select id="ai-model-select">
+                <option value="openai">OpenAI (ChatGPT)</option>
+                <option value="spark">讯飞星火大模型</option>
+                <option value="secure" selected>安全模式（服务端签名）</option>
+                <option value="custom">自定义模型</option>
+                <option value="disabled">不使用AI</option>
+            </select>
+            <button id="apply-ai-config" class="secondary-btn">应用配置</button>
+        </div>
+        
+        <!-- 编辑器容器 -->
+        <div id="aiEditor"></div>
+        
+        <!-- 错误信息容器 -->
+        <div id="editor-error-container"></div>
+        
+        <div class="editor-actions">
+            <button id="dark-mode-toggle" class="secondary-btn">
+                <i class="fas fa-moon"></i> 切换暗黑模式
+            </button>
+            <button id="save-content" class="primary-btn">
+                <i class="fas fa-save"></i> 保存内容
+            </button>
+        </div>
+    </div>
+    
+    <!-- AI加载指示器 -->
+    <div id="ai-loading-indicator">
+        <i class="fas fa-spinner fa-spin"></i> AI正在思考...
+    </div>
+
+    <!-- 引入脚本 -->
+    <script src="/js/libs/aieditor/aieditor.js"></script>
+    <script type="module">
+        import { createAiEditor } from '/js/examples/ai-editor-usage.js';
+        
+        document.addEventListener('DOMContentLoaded', () => {
+            // 初始化编辑器
+            let selectedModel = localStorage.getItem('preferred_ai_model') || 'secure';
+            let editor = createAiEditor('#aiEditor', selectedModel);
+            
+            // 设置模型选择器的初始值
+            document.getElementById('ai-model-select').value = selectedModel;
+            
+            // 监听保存按钮点击
+            document.getElementById('save-content').addEventListener('click', () => {
+                if (editor) {
+                    const content = editor.getHtml();
+                    saveContent(content);
+                }
+            });
+            
+            // 监听暗黑模式切换
+            document.getElementById('dark-mode-toggle').addEventListener('click', () => {
+                document.body.classList.toggle('dark-mode');
+                const isDarkMode = document.body.classList.contains('dark-mode');
+                localStorage.setItem('dark_mode', isDarkMode ? 'true' : 'false');
+                
+                // 更新按钮图标
+                const icon = document.querySelector('#dark-mode-toggle i');
+                if (isDarkMode) {
+                    icon.classList.remove('fa-moon');
+                    icon.classList.add('fa-sun');
+                } else {
+                    icon.classList.remove('fa-sun');
+                    icon.classList.add('fa-moon');
+                }
+            });
+            
+            // 应用AI配置
+            document.getElementById('apply-ai-config').addEventListener('click', () => {
+                const selectElement = document.getElementById('ai-model-select');
+                const selectedModel = selectElement.value;
+                
+                // 保存用户选择
+                localStorage.setItem('preferred_ai_model', selectedModel);
+                
+                // 重建编辑器
+                if (editor) {
+                    const content = editor.getHtml(); // 保存当前内容
+                    
+                    // 重新创建编辑器
+                    editor = createAiEditor('#aiEditor', selectedModel);
+                    
+                    // 恢复内容
+                    if (editor && content) {
+                        setTimeout(() => {
+                            editor.setHtml(content);
+                        }, 100);
+                    }
+                    
+                    showMessage(`已切换到${selectElement.options[selectElement.selectedIndex].text}`);
+                }
+            });
+            
+            // 检查是否应该应用暗黑模式
+            if (localStorage.getItem('dark_mode') === 'true') {
+                document.body.classList.add('dark-mode');
+                const icon = document.querySelector('#dark-mode-toggle i');
+                icon.classList.remove('fa-moon');
+                icon.classList.add('fa-sun');
+            }
+            
+            // 从本地存储加载草稿内容
+            const savedDraft = localStorage.getItem('ai_editor_draft');
+            if (savedDraft && editor) {
+                setTimeout(() => {
+                    editor.setHtml(savedDraft);
+                }, 100);
+            }
+            
+            // 定期自动保存草稿
+            setInterval(() => {
+                if (editor) {
+                    const content = editor.getHtml();
+                    localStorage.setItem('ai_editor_draft', content);
+                    console.log('草稿自动保存成功，字符数:', content.length);
+                }
+            }, 30000); // 每30秒保存一次
+        });
+        
+        /**
+         * 保存内容到服务器
+         * @param {string} content - 编辑器内容
+         */
+        function saveContent(content) {
+            // 显示保存中提示
+            showMessage('保存中...');
+            
+            // 发送请求保存内容
+            fetch('/api/articles/draft', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRF-TOKEN': document.querySelector('meta[name="csrf-token"]')?.getAttribute('content') || ''
+                },
+                body: JSON.stringify({
+                    title: '通过AI编辑器创建的草稿',
+                    content: content,
+                    draft: true
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    showMessage('保存成功！');
+                } else {
+                    showError('保存失败: ' + data.message);
+                }
+            })
+            .catch(error => {
+                showError('保存出错: ' + error.message);
+            });
+        }
+        
+        /**
+         * 显示消息
+         * @param {string} message - 消息内容
+         */
+        function showMessage(message) {
+            const errorContainer = document.getElementById('editor-error-container');
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+            errorContainer.style.backgroundColor = '#e8f5e9';
+            errorContainer.style.color = '#2e7d32';
+            
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+            }, 3000);
+        }
+        
+        /**
+         * 显示错误消息
+         * @param {string} message - 错误消息
+         */
+        function showError(message) {
+            const errorContainer = document.getElementById('editor-error-container');
+            errorContainer.textContent = message;
+            errorContainer.style.display = 'block';
+            errorContainer.style.backgroundColor = '#ffebee';
+            errorContainer.style.color = '#c62828';
+            
+            setTimeout(() => {
+                errorContainer.style.display = 'none';
+            }, 5000);
+        }
+    </script>
+</body>
+</html>

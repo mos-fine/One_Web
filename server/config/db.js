@@ -99,10 +99,39 @@ function setupDatabase() {
       username VARCHAR(50) NOT NULL UNIQUE,
       password VARCHAR(255) NOT NULL,
       name VARCHAR(100),
-      avatar VARCHAR(255),
+      avatar VARCHAR(255) DEFAULT '/images/avatar.png',
+      email VARCHAR(100),
+      phone VARCHAR(20),
+      bio TEXT,
       created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
     )
   `);
+  
+  // 更新现有admin表，添加新的字段
+  db.query(`
+    SHOW COLUMNS FROM admin LIKE 'email'
+  `, (err, results) => {
+    if (err) {
+      console.error('检查admin表结构失败:', err);
+      return;
+    }
+    
+    // 如果email字段不存在，添加新字段
+    if (results.length === 0) {
+      db.query(`
+        ALTER TABLE admin
+        ADD COLUMN email VARCHAR(100),
+        ADD COLUMN phone VARCHAR(20),
+        ADD COLUMN bio TEXT
+      `, (err) => {
+        if (err) {
+          console.error('更新admin表结构失败:', err);
+        } else {
+          console.log('已成功更新admin表结构，添加了email、phone和bio字段');
+        }
+      });
+    }
+  });
   
   // 创建社交媒体信息表
   db.query(`
