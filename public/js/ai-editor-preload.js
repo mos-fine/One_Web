@@ -36,17 +36,32 @@ document.addEventListener('DOMContentLoaded', async function() {
             
             try {
                 // 动态导入 AI 配置 API 模块
-                const { getAiEditorConfig } = await import('/js/api/aiEditorApi.js');
+                const { getAiEditorConfig, validateAiConfig } = await import('/js/api/aiEditorApi.js');
                 
-                // 获取 AI 配置
-                const aiConfig = await getAiEditorConfig();
+                // 获取 AI 配置并验证
+                const aiConfig = await getAiEditorConfig(false, true);
                 
                 // 保存 AI 配置到全局对象
                 window.editorResources.aiConfig = aiConfig;
-                window.editorResources.aiConfigLoaded = true;
+                window.editorResources.aiConfigLoaded = !!aiConfig;
                 
-                console.log('AiEditor AI 配置预加载成功', 
-                    aiConfig ? '（AI功能已启用）' : '（AI功能已禁用）');
+                // 如果配置有效，进行额外验证
+                if (aiConfig) {
+                    console.log('AiEditor AI 配置预加载成功（AI功能已启用）');
+                    
+                    // 后台验证配置，但不阻塞预加载流程
+                    validateAiConfig(aiConfig).then(result => {
+                        window.editorResources.aiConfigValid = result.valid;
+                        window.editorResources.aiConfigValidMessage = result.message;
+                        
+                        if (!result.valid) {
+                            console.warn('AI配置验证警告:', result.message);
+                        }
+                    });
+                } else {
+                    console.log('AiEditor AI 配置预加载成功（AI功能已禁用）');
+                    window.editorResources.aiConfigValid = false;
+                }
                 
                 // 更新全局资源状态
                 window.editorResources.loaded = true;

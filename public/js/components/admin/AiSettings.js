@@ -420,8 +420,17 @@ export default {
       
       // 发送到服务器
       axios.post('/api/admin/ai-settings', settingsToSave)
-        .then(response => {
+        .then(async response => {
           if (response.data.success) {
+            // 清除AI配置缓存，确保下次获取最新配置
+            try {
+              const { clearAiConfigCache } = await import('/js/api/aiEditorApi.js');
+              clearAiConfigCache();
+              console.log('AI配置缓存已清除，将使用最新设置');
+            } catch (err) {
+              console.error('清除AI配置缓存失败:', err);
+            }
+            
             this.$emit('success', '已成功保存AI设置');
             // 保存到本地存储，供编辑器使用
             localStorage.setItem('preferred_ai_model', this.aiConfig.modelType);
@@ -517,7 +526,16 @@ export default {
       if (!this.testPrompt.trim() || this.testing) return;
       
       this.testing = true;
-      this.testResult = '';
+      this.testResult = '正在测试中，请稍候...\n\n这可能需要5-10秒，取决于API响应速度。';
+      
+      // 准备模型类型显示名称
+      const modelTypeName = {
+        'openai': 'OpenAI (ChatGPT)',
+        'spark': '讯飞星火大模型',
+        'wenxin': '百度文心一言',
+        'custom': '自定义API',
+        'secure': '安全代理模式'
+      }[this.aiConfig.modelType] || this.aiConfig.modelType;
       
       // 发送测试请求
       axios.post('/api/admin/test-ai', {
@@ -526,15 +544,37 @@ export default {
       })
         .then(response => {
           if (response.data.success) {
-            this.testResult = response.data.result;
+            this.testResult = `测试成功！\n模型类型: ${modelTypeName}\n\n响应结果:\n${response.data.result}`;
           } else {
-            this.testResult = `测试失败: ${response.data.message}`;
+            this.testResult = `测试失败: ${response.data.message}\n\n请检查以下可能的原因:\n1. API密钥是否正确\n2. 模型名称是否正确\n3. 网络连接是否正常`;
           }
           this.testing = false;
         })
         .catch(error => {
           console.error('测试AI功能时出错:', error);
-          this.testResult = `出错: ${error.response?.data?.message || error.message}`;
+          
+          let errorMessage = error.message || '未知错误';
+          let errorDetails = '';
+          
+          // 添加详细的错误信息
+          if (error.response) {
+            // 服务器返回了错误状态码
+            errorDetails = `服务器状态码: ${error.response.status}\n`;
+            
+            if (error.response.data) {
+              if (error.response.data.message) {
+                errorDetails += `错误信息: ${error.response.data.message}\n`;
+              }
+              if (error.response.data.error) {
+                errorDetails += `详细错误: ${error.response.data.error}\n`;
+              }
+            }
+          } else if (error.request) {
+            // 请求已发送但没有收到响应
+            errorDetails = '服务器没有响应，可能是网络问题或服务器超时。';
+          }
+          
+          this.testResult = `测试AI功能失败\n\n错误: ${errorMessage}\n\n${errorDetails}\n\n请检查:\n1. API密钥是否正确\n2. 模型名称是否正确 (${this.aiConfig.openai?.model || '未设置'})\n3. 网络连接是否正常\n4. 服务器日志以获取更多信息`;
           this.testing = false;
         });
     },

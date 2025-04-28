@@ -1,0 +1,41 @@
+{
+  "enabled": true,
+  "modelType": "openai",
+  "openai": {
+    "apiKey": "sk-f9b6f22ff7d146bbb1bd5312ed5c5182",
+    "model": "qwen-plus",
+    "endpoint": "https://dashscope.aliyuncs.com/compatible-mode"
+  },
+  "spark": {
+    "appId": "",
+    "apiKey": "",
+    "apiSecret": "",
+    "version": "v3.5"
+  },
+  "wenxin": {
+    "accessToken": ""
+  },
+  "custom": {
+    "url": "",
+    "protocol": "sse"
+  },
+  "secure": {
+    "appId": "default_app_id"
+  },
+  "features": {
+    "bubblePanelEnable": true,
+    "enabledMenus": [
+      "ai_continue",
+      "ai_summarize",
+      "ai_translate",
+      "ai_improve",
+      "ai_checkgrammar",
+      "ai_rewrite"
+    ],
+    "trackTokenUsage": true
+  },
+  "limits": {
+    "dailyTokenLimit": 100000,
+    "maxQueryLength": 5000
+  }
+}

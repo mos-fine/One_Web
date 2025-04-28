@@ -65,18 +65,6 @@
   padding: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.1);
   width: 100%;
-  transition: box-shadow 0.3s ease, transform 0.2s ease, opacity 0.2s ease;
-  will-change: transform, opacity;
-}
-
-/* 确保工具栏父容器能够支持sticky定位 */
-.ai-editor .ql-container {
-  overflow: visible !important;
-}
-
-/* 确保整个编辑器容器支持sticky工具栏 */
-.ai-editor-container {
-  contain: layout;
 }
 
 /* 调整图片大小控制器 */

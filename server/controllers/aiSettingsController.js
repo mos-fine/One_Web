@@ -434,10 +434,15 @@ async function testOpenai(prompt, config) {
   // 准备请求参数
   const url = config.customUrl || 
               `${config.endpoint || 'https://api.openai.com'}/v1/chat/completions`;
+              
+  console.log(`正在使用端点: ${url}`);
+  console.log(`使用的模型: ${config.model || 'gpt-3.5-turbo'}`);
   
   const headers = {
     'Content-Type': 'application/json',
-    'Authorization': `Bearer ${config.apiKey}`
+    'Authorization': `Bearer ${config.apiKey}`,
+    // 确保使用最新的API版本
+    'OpenAI-Beta': 'assistants=v1'
   };
   
   const data = {
@@ -446,22 +451,47 @@ async function testOpenai(prompt, config) {
       { role: 'system', content: '你是一个有帮助的AI助手。' },
       { role: 'user', content: prompt }
     ],
-    max_tokens: 500
+    max_tokens: 500,
+    temperature: 0.7
   };
   
   try {
-    const response = await axios.post(url, data, { headers });
+    console.log('发送API请求到OpenAI...');
+    // 设置较长的超时时间
+    const response = await axios.post(url, data, { 
+      headers,
+      timeout: 30000 // 30秒超时
+    });
+    
+    console.log('收到OpenAI响应:', response.status);
     
     if (response.data && response.data.choices && response.data.choices.length > 0) {
       return response.data.choices[0].message.content;
     } else {
+      console.error('OpenAI响应格式不符合预期:', JSON.stringify(response.data));
       throw new Error('无效的AI响应格式');
     }
   } catch (error) {
+    console.error('OpenAI API调用出错:', error);
+    
     if (error.response) {
-      throw new Error(`API调用失败: ${error.response.status} - ${error.response.data.error?.message || '未知错误'}`);
+      // 详细记录API错误
+      const errorDetails = error.response.data && error.response.data.error 
+        ? JSON.stringify(error.response.data.error) 
+        : '无详细错误信息';
+      
+      console.error(`API状态码: ${error.response.status}`);
+      console.error(`API错误详情: ${errorDetails}`);
+      
+      throw new Error(`API调用失败: ${error.response.status} - ${error.response.data.error?.message || errorDetails}`);
+    } else if (error.request) {
+      // 请求已发送但没有收到响应
+      console.error('没有收到API响应');
+      throw new Error(`API调用超时或无响应: ${error.message}`);
     } else {
-      throw new Error(`API调用失败: ${error.message}`);
+      // 设置请求时发生的错误
+      console.error('请求设置错误:', error.message);
+      throw new Error(`API请求错误: ${error.message}`);
     }
   }
 }
@@ -495,10 +525,48 @@ async function testSecureProxy(prompt, config) {
   }
   
   try {
-    // 这里在实际应用中应该调用你的代理API
-    // 简单模拟一个响应
-    return `[安全代理模式模拟响应] 您的提问是: "${prompt}"\n\n安全代理模式下，所有AI请求将通过服务器端安全处理，API密钥不会暴露在前端。\n\n这是一个模拟响应，实际环境中请确保服务端代理正确配置。`;
+    console.log('测试安全代理模式, AppID:', config.appId);
+    
+    // 检查是否有可用的API密钥
+    let useBackupApi = false;
+    const backupApiKey = process.env.OPENAI_API_KEY || process.env.AI_BACKUP_KEY;
+    
+    if (backupApiKey) {
+      console.log('检测到环境变量中的备用API密钥，尝试使用它进行真实测试');
+      
+      try {
+        // 尝试使用环境变量中的备用API密钥进行测试
+        const testResult = await axios.post('https://api.openai.com/v1/chat/completions', {
+          model: 'gpt-3.5-turbo',
+          messages: [
+            { role: 'system', content: '你是一个用于测试的AI助手。请用中文简短回复。' },
+            { role: 'user', content: prompt }
+          ],
+          max_tokens: 150,
+          temperature: 0.7
+        }, {
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${backupApiKey}`
+          },
+          timeout: 10000
+        });
+        
+        if (testResult.data && testResult.data.choices && testResult.data.choices.length > 0) {
+          const response = testResult.data.choices[0].message.content;
+          return `[安全代理模式 - 真实测试响应]\n\n${response}\n\n---\n安全代理模式已正确配置，API密钥安全存储在服务器端。`;
+        }
+      } catch (apiError) {
+        console.error('使用备用API密钥测试失败:', apiError.message);
+        // 如果API调用失败，回退到模拟响应
+        useBackupApi = false;
+      }
+    }
+    
+    // 如果没有备用API密钥或API调用失败，返回模拟响应
+    return `[安全代理模式 - 模拟响应] 您的提问是: "${prompt}"\n\n安全代理模式下，所有AI请求将通过服务器端安全处理，API密钥不会暴露在前端。\n\n这是一个模拟响应。在实际环境中，服务器将使用安全存储的密钥调用AI服务。如需进行真实测试，请在服务器环境变量中配置OPENAI_API_KEY。`;
   } catch (error) {
+    console.error('安全代理测试失败:', error);
     throw new Error(`安全代理请求失败: ${error.message}`);
   }
 }

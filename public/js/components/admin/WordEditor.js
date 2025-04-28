@@ -526,3 +526,86 @@ function loadAiEditorScript() {
     document.head.appendChild(scriptElement);
   });
 }
+
+/**
+ * 使用最新AI配置重新初始化编辑器
+ * 在编辑器实例已存在时使用此方法应用新的AI配置
+ * 
+ * @param {Object} editorInterface 编辑器接口对象
+ * @returns {Promise<Object>} 更新后的编辑器接口对象
+ */
+export async function reinitializeAiConfig(editorInterface) {
+  if (!editorInterface || !editorInterface.aiEditor) {
+    console.warn('无法重新初始化AI配置：编辑器接口对象不存在或不包含aiEditor');
+    return editorInterface;
+  }
+
+  try {
+    console.log('正在使用最新配置重新初始化AI功能...');
+    
+    // 动态导入配置API
+    const { getAiEditorConfig, clearAiConfigCache } = await import('/js/api/aiEditorApi.js');
+    
+    // 强制刷新配置
+    clearAiConfigCache();
+    const aiConfig = await getAiEditorConfig(true);
+    
+    // 将新配置应用到编辑器
+    if (aiConfig) {
+      editorInterface.aiEditor.setAiConfig(aiConfig);
+      console.log('已成功应用最新AI配置');
+      
+      // 如果有状态指示器，更新状态
+      const statusElement = document.getElementById('word-editor-status');
+      if (statusElement) {
+        const aiStatusSpan = statusElement.querySelector('.ai-status');
+        if (aiStatusSpan) {
+          aiStatusSpan.innerHTML = '<i class="fas fa-robot"></i> AI 已更新';
+          aiStatusSpan.style.color = '#28a745';
+          
+          // 3秒后恢复正常显示
+          setTimeout(() => {
+            aiStatusSpan.innerHTML = '<i class="fas fa-robot"></i> AI 已启用';
+          }, 3000);
+        } else {
+          statusElement.innerHTML += ' <span class="ai-status" style="color: #28a745;"><i class="fas fa-robot"></i> AI 已启用</span>';
+        }
+      }
+      
+      // 更新工具栏中的AI状态指示器
+      const aiIndicator = document.querySelector('.ai-status-indicator');
+      if (aiIndicator) {
+        aiIndicator.innerHTML = '<i class="fas fa-robot"></i> AI 已就绪';
+        aiIndicator.style.backgroundColor = '#e8f5e9';
+        aiIndicator.style.color = '#2e7d32';
+      }
+    } else {
+      console.log('AI功能已在后台管理中禁用');
+      
+      // 更新状态指示器
+      const statusElement = document.getElementById('word-editor-status');
+      if (statusElement) {
+        const aiStatusSpan = statusElement.querySelector('.ai-status');
+        if (aiStatusSpan) {
+          aiStatusSpan.innerHTML = '<i class="fas fa-robot"></i> AI 已禁用';
+          aiStatusSpan.style.color = '#dc3545';
+        } else {
+          statusElement.innerHTML += ' <span class="ai-status" style="color: #dc3545;"><i class="fas fa-robot"></i> AI 已禁用</span>';
+        }
+      }
+      
+      // 更新工具栏中的AI状态指示器
+      const aiIndicator = document.querySelector('.ai-status-indicator');
+      if (aiIndicator) {
+        aiIndicator.innerHTML = '<i class="fas fa-robot"></i> AI 已禁用';
+        aiIndicator.style.backgroundColor = '#ffebee';
+        aiIndicator.style.color = '#c62828';
+      }
+    }
+    
+    return editorInterface;
+  } catch (error) {
+    console.error('重新初始化AI配置失败:', error);
+    return editorInterface;
+  }
+}
