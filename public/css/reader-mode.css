@@ -1,0 +1,119 @@
+/* 文章阅读模式样式 */
+/* 文章工具栏 */
+.article-toolbar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 15px 0;
+  margin-bottom: 20px;
+  border-bottom: 1px solid var(--medium-gray);
+  position: sticky;
+  top: 0;
+  background: inherit;
+  z-index: 100;
+}
+
+.left-actions, .right-actions {
+  display: flex;
+  align-items: center;
+}
+
+.btn-action {
+  background: transparent;
+  border: none;
+  color: var(--secondary-color);
+  margin-left: 15px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  padding: 5px 10px;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  transition: var(--transition);
+}
+
+.btn-action:first-child {
+  margin-left: 0;
+}
+
+.btn-action:hover {
+  background-color: var(--light-gray);
+  color: var(--primary-color);
+}
+
+.btn-action i {
+  margin-right: 5px;
+}
+
+/* 暖色护眼阅读模式 */
+.article-detail.reader-mode {
+  background-color: #f8f2e3; /* 暖色米黄色背景 */
+  color: #5c4b37; /* 更深的棕色文字，避免对比过强 */
+  transition: all 0.3s ease;
+}
+
+/* 阅读模式下文章内容的样式 */
+.reader-mode .article-detail-content {
+  color: #5c4b37;
+  line-height: 1.8;
+}
+
+/* 阅读模式下的标题样式 */
+.reader-mode .article-detail-title,
+.reader-mode .article-detail-content h1,
+.reader-mode .article-detail-content h2,
+.reader-mode .article-detail-content h3,
+.reader-mode .article-detail-content h4,
+.reader-mode .article-detail-content h5,
+.reader-mode .article-detail-content h6 {
+  color: #8b6b4f;
+}
+
+/* 阅读模式下的链接样式 */
+.reader-mode a {
+  color: #7e6c56;
+}
+
+.reader-mode a:hover {
+  color: #c17f46;
+}
+
+/* 阅读模式下的代码块和引用块样式 */
+.reader-mode .article-detail-content pre {
+  background-color: #f0e6d2;
+  border: 1px solid #e6d9c2;
+}
+
+.reader-mode .article-detail-content blockquote {
+  border-left: 4px solid #d3bb91;
+  background-color: #f5ebd7;
+  color: #6b573d;
+}
+
+/* 阅读模式下图片稍微柔化处理 */
+.reader-mode img {
+  filter: brightness(0.95) contrast(0.95);
+}
+
+/* 阅读模式下的表格样式 */
+.reader-mode table {
+  background-color: #f5ebd7;
+  border-color: #e6d9c2;
+}
+
+.reader-mode th {
+  background-color: #e6d9c2;
+  color: #5c4b37;
+}
+
+.reader-mode td {
+  border-color: #e6d9c2;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .btn-action {
+    font-size: 0.8rem;
+    padding: 3px 8px;
+  }
+}
